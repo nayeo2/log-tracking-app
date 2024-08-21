@@ -14,26 +14,44 @@ import java.util.stream.IntStream;
 public class LogController {
     Random random = new Random();
 
+    private String computeHash(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @GetMapping("/products")
     public String showProducts(
         @RequestParam(name="user-id", required = false) String userId,
         HttpServletRequest request
     ) {
-        // 5개의 상품 id 리스트가 보여졌다고 가정
         List<Integer> productIds = IntStream
             .range(0, 5)
             .mapToObj(i -> random.nextInt(100) + 1)
             .toList();
 
         for (int productId : productIds) {
+            // 해싱 연산 추가
+            String hash = computeHash("product" + productId);
+
             CustomLogger.logRequest(
-                "l",  // list 의 약자
+                "l",
                 "/products/",
                 "GET",
-                userId != null ? userId : "-",  // userId가 없으면 "-"로 대체
-                "-",                            // GET 메서드에는 transactionId가 없으므로 "-"로 대체
-                String.valueOf(productId),
+                userId != null ? userId : "-",
                 "-",
+                String.valueOf(productId),
+                hash,  // 해싱 값 추가
                 "-",
                 "-",
                 request
@@ -48,17 +66,20 @@ public class LogController {
         @RequestParam(name="user-id", required = false) String userId,
         HttpServletRequest request
     ) {
+        // 해싱 연산 추가
+        String hash = computeHash("product" + productId);
+
         CustomLogger.logRequest(
-            "v",  // view 의 약자
+            "v",
             "/products/" + productId,
             "GET",
-            userId != null ? userId : "-",  // userId가 없으면 "-"로 대체
-            "-",                            // GET 메서드에는 transactionId가 없으므로 "-"로 대체
+            userId != null ? userId : "-",
+            "-",
             productId,
+            hash,  // 해싱 값 추가
             "-",
             "-",
-            "-",
-            request  // clientIp, userAgent, referer 정보를 얻기 위해 HttpServletRequest 객체를 파라미터로 추가
+            request
         );
         return "상품 조회 로그 1행 기록됨";
     }
@@ -69,17 +90,20 @@ public class LogController {
         @RequestBody CartForm cartForm,
         HttpServletRequest request
     ) {
+        // 해싱 연산 추가
+        String hash = computeHash(cartForm.getProductId().toString() + cartForm.getQuantity().toString());
+
         CustomLogger.logRequest(
-            "c",  // cart 의 약자
+            "c",
             "/cart",
             "POST",
             cartForm.getUserId().toString(),
             transactionId,
             cartForm.getProductId().toString(),
             cartForm.getId().toString(),
-            "-",
+            hash,  // 해싱 값 추가
             cartForm.getQuantity().toString(),
-            request  // clientIp, userAgent, referer 정보를 얻기 위해 HttpServletRequest 객체를 파라미터로 추가
+            request
         );
         return "장바구니 추가 로그 1행 기록됨";
     }
@@ -90,8 +114,11 @@ public class LogController {
         @RequestBody OrderForm orderForm,
         HttpServletRequest request
     ) {
+        // 해싱 연산 추가
+        String hash = computeHash(orderForm.getProductId().toString() + orderForm.getQuantity().toString());
+
         CustomLogger.logRequest(
-            "o",  // order 의 약자
+            "o",
             "/order",
             "POST",
             orderForm.getUserId().toString(),
@@ -99,8 +126,8 @@ public class LogController {
             orderForm.getProductId().toString(),
             orderForm.getCartId() != null ? orderForm.getCartId().toString() : "-",
             orderForm.getId().toString(),
-            orderForm.getQuantity().toString(),
-            request  // clientIp, userAgent, referer 정보를 얻기 위해 HttpServletRequest 객체를 파라미터로 추가
+            hash,  // 해싱 값 추가
+            request
         );
         return "주문 로그 1행 기록됨";
     }
