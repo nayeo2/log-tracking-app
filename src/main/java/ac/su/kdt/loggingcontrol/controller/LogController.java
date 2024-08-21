@@ -6,6 +6,8 @@ import ac.su.kdt.loggingcontrol.logger.CustomLogger;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
