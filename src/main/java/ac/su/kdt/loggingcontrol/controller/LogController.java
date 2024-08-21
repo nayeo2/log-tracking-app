@@ -16,12 +16,31 @@ import java.util.stream.IntStream;
 public class LogController {
     Random random = new Random();
 
-    private String computeHash(String input) {
+    // 다중 해시 연산 메서드
+    private String computeMultipleHashes(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes());
+
+            // 첫 번째 해시 반복
+            for (int i = 0; i < 100; i++) {
+                hash = digest.digest(hash);
+            }
+
+            // 두 번째 해시 생성 및 결합
+            byte[] secondHash = digest.digest(hash);
+            for (int i = 0; i < 100; i++) {
+                secondHash = digest.digest(secondHash);
+            }
+
+            // 두 해시를 결합하여 최종 해시 생성
+            byte[] combinedHash = new byte[hash.length + secondHash.length];
+            System.arraycopy(hash, 0, combinedHash, 0, hash.length);
+            System.arraycopy(secondHash, 0, combinedHash, hash.length, secondHash.length);
+
+            // 해시를 16진수 문자열로 변환
             StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
+            for (byte b : combinedHash) {
                 String hex = Integer.toHexString(0xff & b);
                 if(hex.length() == 1) hexString.append('0');
                 hexString.append(hex);
@@ -44,7 +63,7 @@ public class LogController {
 
         for (int productId : productIds) {
             // 해싱 연산 추가
-            String hash = computeHash("product" + productId);
+            String hash = computeMultipleHashes("product" + productId);
 
             CustomLogger.logRequest(
                 "l",
@@ -69,7 +88,7 @@ public class LogController {
         HttpServletRequest request
     ) {
         // 해싱 연산 추가
-        String hash = computeHash("product" + productId);
+        String hash = computeMultipleHashes("product" + productId);
 
         CustomLogger.logRequest(
             "v",
@@ -93,7 +112,7 @@ public class LogController {
         HttpServletRequest request
     ) {
         // 해싱 연산 추가
-        String hash = computeHash(cartForm.getProductId().toString() + cartForm.getQuantity().toString());
+        String hash = computeMultipleHashes(cartForm.getProductId().toString() + cartForm.getQuantity().toString());
 
         CustomLogger.logRequest(
             "c",
@@ -117,7 +136,7 @@ public class LogController {
         HttpServletRequest request
     ) {
         // 해싱 연산 추가
-        String hash = computeHash(orderForm.getProductId().toString() + orderForm.getQuantity().toString());
+        String hash = computeMultipleHashes(orderForm.getProductId().toString() + orderForm.getQuantity().toString());
 
         CustomLogger.logRequest(
             "o",
