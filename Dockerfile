@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 빌드된 JAR 파일을 복사합니다
 # (가장 최근의 JAR 파일을 선택하기 위해 스크립트를 사용할 예정입니다)
-COPY target/ /app/
+COPY build/custom-libs /app/
 
 # JAR 파일을 자동으로 찾고 실행하는 스크립트를 추가합니다
 COPY entrypoint.sh /app/entrypoint.sh
